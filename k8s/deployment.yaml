@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: z-3sp
+  labels:
+    app: z-3sp
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: z-3sp
+  template:
+    metadata:
+      labels:
+        app: z-3sp
+    spec:
+      containers:
+        - name: sms
+          image: registry.example.com/z-3sp:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: APP_ENV
+              value: "prod"
+            - name: REDIS_PASSWD
+              valueFrom:
+                secretKeyRef:
+                  name: z-3sp-secrets
+                  key: redis-passwd
+            - name: SMS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: z-3sp-secrets
+                  key: sms-access-key-id
+            - name: SMS_ACCESS_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: z-3sp-secrets
+                  key: sms-access-key-secret
+          volumeMounts:
+            - name: config
+              mountPath: /app/config/application-prod.yml
+              subPath: application-prod.yml
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 5
+      volumes:
+        - name: config
+          configMap:
+            name: z-3sp-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: z-3sp
+spec:
+  selector:
+    app: z-3sp
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80

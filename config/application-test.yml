@@ -1,0 +1,15 @@
+server:
+  port: 8090
+  mode: test
+
+redis:
+  host: localhost
+  port: 6379
+  db: 0
+  pool_size: 10
+
+sms:
+  access_key_id: ""
+  access_key_secret: ""
+  sign_name: ""
+  template_code: ""

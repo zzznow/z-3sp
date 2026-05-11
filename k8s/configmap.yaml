@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: z-3sp-config
+data:
+  application-prod.yml: |
+    name: "z-3sp"
+    mode: "release"
+    port: 80
+    host: "0.0.0.0"
+    redis:
+      host: "redis.svc.cluster.local"
+      port: 6379
+      db: 0
+      passwd: "${REDIS_PASSWD}"
+      pool_size: 50
+    sms:
+      access_key_id: "${SMS_ACCESS_KEY_ID}"
+      access_key_secret: "${SMS_ACCESS_KEY_SECRET}"
+      sign_name: "池州饭豆"
+      template_code: "SMS_123456789"

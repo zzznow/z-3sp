@@ -1,0 +1,9 @@
+build/
+*.exe
+*.log
+*/.zig-cache
+*/zig-out/
+*/zig-pkg/
+*/*.exe
+nats.zig/
+myzql/
