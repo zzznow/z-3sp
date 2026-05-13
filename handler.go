@@ -14,7 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 
-	"github.com/fndome/z-3sp/internal"
+	"github.com/zzznow/z-3sp/internal"
 )
 
 var smsClient *dysmsapi.Client
@@ -92,7 +92,7 @@ func SendCode(c *gin.Context) {
 	intervalKey := "sms:interval:" + req.Type + ":" + req.Phone
 	ok, _ := rdb.SetNX(c.Request.Context(), intervalKey, "1", 60*time.Second).Result()
 	if !ok {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "请 60 秒后再试"})
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "请60秒后再试"})
 		return
 	}
 
@@ -100,7 +100,7 @@ func SendCode(c *gin.Context) {
 	n, _ := rand.Int(rand.Reader, big.NewInt(1000000))
 	code := fmt.Sprintf("%06d", n.Int64())
 
-	// 发送
+	// 发送短信
 	if _, err := sendAliyunSms(req.Phone, code, req.Type); err != nil {
 		slog.Error("发送短信失败", "phone", req.Phone, "error", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "发送失败，请稍后重试"})

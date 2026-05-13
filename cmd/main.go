@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fndome/z-3sp/handler"
-	"github.com/fndome/z-3sp/internal"
+	"github.com/zzznow/z-3sp"
+	"github.com/zzznow/z-3sp/internal"
 	"github.com/gin-gonic/gin"
 )
 
