@@ -22,7 +22,7 @@ RUN go build -ldflags="-s -w" -o app cmd/main.go
 FROM alpine
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 
-WORKDIR /apps
+WORKDIR /app
 ENV LANG en_US.UTF-8
 
 COPY --from=builder /build/app .
