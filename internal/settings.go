@@ -2,6 +2,7 @@ package internal
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
@@ -39,6 +40,11 @@ func InitConfig(env string) error {
 	if err := viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("read config: %w", err)
 	}
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+	viper.BindEnv("redis.passwd")
+	viper.BindEnv("sms.access_key_id")
+	viper.BindEnv("sms.access_key_secret")
 	if err := viper.Unmarshal(Conf); err != nil {
 		return fmt.Errorf("unmarshal config: %w", err)
 	}
