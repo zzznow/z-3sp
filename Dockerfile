@@ -31,4 +31,4 @@ COPY --from=builder /build/app .
 COPY --from=builder /build/config ./config
 
 EXPOSE 80
-ENTRYPOINT ["./app", "prod"]
+ENTRYPOINT ["./app"]
