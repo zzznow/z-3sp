@@ -21,11 +21,14 @@ var smsClient *dysmsapi.Client
 var rdb *redis.Client
 
 func InitSms() error {
+	fmt.Println("InitSms: start")
 	cfg := internal.Conf.SmsConfig
 	if cfg == nil || cfg.AccessKeyId == "" {
+		fmt.Println("InitSms: config empty, skip")
 		slog.Warn("阿里云短信配置为空，跳过初始化")
 		return nil
 	}
+	fmt.Println("InitSms: creating client...")
 
 	var err error
 	smsClient, err = dysmsapi.NewClientWithAccessKey("cn-hangzhou", cfg.AccessKeyId, cfg.AccessKeySecret)
@@ -37,11 +40,14 @@ func InitSms() error {
 }
 
 func InitRedis() error {
+	fmt.Println("InitRedis: start")
 	cfg := internal.Conf.RedisConfig
 	if cfg == nil || cfg.Host == "" {
+		fmt.Println("InitRedis: config empty, skip")
 		slog.Warn("Redis 配置为空，跳过初始化")
 		return nil
 	}
+	fmt.Println("InitRedis: connecting...")
 
 	rdb = redis.NewClient(&redis.Options{
 		Addr:     fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
