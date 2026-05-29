@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
 )
 
@@ -56,11 +55,5 @@ func InitConfig(env string) error {
 		return fmt.Errorf("unmarshal config: %w", err)
 	}
 	fmt.Printf("InitConfig: done, mode=%s port=%d host=%s\n", Conf.Mode, Conf.Port, Conf.Host)
-
-	viper.WatchConfig()
-	viper.OnConfigChange(func(in fsnotify.Event) {
-		fmt.Println("InitConfig: config changed, reloading...")
-		viper.Unmarshal(Conf)
-	})
 	return nil
 }
