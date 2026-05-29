@@ -10,25 +10,26 @@ import (
 )
 
 func main() {
-	fmt.Println("z-3sp starting...")
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("FATAL: %v\n", r)
+			os.Exit(1)
+		}
+	}()
+
 	env := os.Getenv("APP_ENV")
-	fmt.Println("env:", env)
 	if env == "" {
 		env = "test"
 	}
-	fmt.Println("loading config for:", env)
 
 	if err := internal.InitConfig(env); err != nil {
-		fmt.Println("InitConfig failed:", err)
-		panic(err)
+		fmt.Printf("InitConfig failed: %v\n", err)
+		os.Exit(1)
 	}
-	fmt.Println("config loaded")
 
 	if err := handler.InitSms(); err != nil {
-		fmt.Println("InitSms failed:", err)
-		panic(err)
+		fmt.Printf("warn: sms init failed: %v\n", err)
 	}
-	fmt.Println("sms init done")
 	if err := handler.InitRedis(); err != nil {
 		fmt.Printf("warn: redis init failed: %v\n", err)
 	}
@@ -39,5 +40,8 @@ func main() {
 
 	addr := fmt.Sprintf("%s:%d", internal.Conf.Host, internal.Conf.Port)
 	fmt.Printf("z-3sp SMS Service started at %s\n", addr)
-	r.Run(addr)
+	if err := r.Run(addr); err != nil {
+		fmt.Printf("server error: %v\n", err)
+		os.Exit(1)
+	}
 }
