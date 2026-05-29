@@ -10,12 +10,7 @@ import (
 )
 
 func main() {
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Printf("FATAL: %v\n", r)
-			os.Exit(1)
-		}
-	}()
+	fmt.Println("z-3sp starting...")
 
 	env := os.Getenv("APP_ENV")
 	if env == "" {
@@ -26,20 +21,14 @@ func main() {
 		fmt.Printf("InitConfig failed: %v\n", err)
 		os.Exit(1)
 	}
-
-	if err := handler.InitSms(); err != nil {
-		fmt.Printf("warn: sms init failed: %v\n", err)
-	}
-	if err := handler.InitRedis(); err != nil {
-		fmt.Printf("warn: redis init failed: %v\n", err)
-	}
+	fmt.Println("config loaded")
 
 	gin.SetMode(internal.Conf.Mode)
 	r := gin.Default()
 	handler.RegisterRoutes(r)
 
 	addr := fmt.Sprintf("%s:%d", internal.Conf.Host, internal.Conf.Port)
-	fmt.Printf("z-3sp SMS Service started at %s\n", addr)
+	fmt.Printf("listening on %s\n", addr)
 	if err := r.Run(addr); err != nil {
 		fmt.Printf("server error: %v\n", err)
 		os.Exit(1)
