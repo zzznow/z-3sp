@@ -35,21 +35,31 @@ type SmsConfig struct {
 }
 
 func InitConfig(env string) error {
-	viper.SetConfigFile("config/application-" + env + ".yml")
+	cfgFile := "config/application-" + env + ".yml"
+	fmt.Printf("InitConfig: reading %s\n", cfgFile)
+
+	viper.SetConfigFile(cfgFile)
 	viper.AddConfigPath(".")
 	if err := viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("read config: %w", err)
 	}
+	fmt.Println("InitConfig: viper read OK, setting env bindings...")
+
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 	viper.BindEnv("redis.passwd")
 	viper.BindEnv("sms.access_key_id")
 	viper.BindEnv("sms.access_key_secret")
+
+	fmt.Println("InitConfig: unmarshaling to struct...")
 	if err := viper.Unmarshal(Conf); err != nil {
 		return fmt.Errorf("unmarshal config: %w", err)
 	}
+	fmt.Printf("InitConfig: done, mode=%s port=%d host=%s\n", Conf.Mode, Conf.Port, Conf.Host)
+
 	viper.WatchConfig()
 	viper.OnConfigChange(func(in fsnotify.Event) {
+		fmt.Println("InitConfig: config changed, reloading...")
 		viper.Unmarshal(Conf)
 	})
 	return nil
