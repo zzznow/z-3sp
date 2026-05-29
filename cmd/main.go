@@ -10,9 +10,9 @@ import (
 )
 
 func main() {
-	env := "test"
-	if len(os.Args) > 1 {
-		env = os.Args[1]
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = "test"
 	}
 
 	if err := internal.InitConfig(env); err != nil {
