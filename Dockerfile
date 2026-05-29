@@ -1,11 +1,15 @@
-FROM golang:1.26.3-alpine as builder
+FROM golang:1.26-alpine AS builder
 
 ENV GO111MODULE=on \
     CGO_ENABLED=0 \
     GOOS=linux \
     GOARCH=amd64 \
-    GOPROXY=https://goproxy.cn,https://proxy.golang.org,direct \
+    GOPROXY=https://goproxy.cn,direct \
     GONOSUMDB=*
+
+RUN echo "http://mirrors.tuna.tsinghua.edu.cn/alpine/v3.23/main" > /etc/apk/repositories && \
+    echo "http://mirrors.tuna.tsinghua.edu.cn/alpine/v3.23/community" >> /etc/apk/repositories && \
+    apk add --no-cache git
 
 WORKDIR /build
 COPY go.mod go.sum ./
@@ -13,18 +17,18 @@ RUN go mod download
 COPY . .
 RUN go build -ldflags="-s -w" -o app cmd/main.go
 
-FROM alpine:3.21
-RUN apk --no-cache add tzdata ca-certificates && \
+FROM alpine:3.23
+WORKDIR /app
+ENV LANG=en_US.UTF-8
+
+RUN echo "http://mirrors.tuna.tsinghua.edu.cn/alpine/v3.23/main" > /etc/apk/repositories && \
+    echo "http://mirrors.tuna.tsinghua.edu.cn/alpine/v3.23/community" >> /etc/apk/repositories && \
+    apk add --no-cache tzdata ca-certificates && \
     cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     update-ca-certificates
 
-WORKDIR /app
-ENV LANG en_US.UTF-8
-
 COPY --from=builder /build/app .
 COPY --from=builder /build/config ./config
-COPY --from=builder /etc/localtime /etc/localtime
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 EXPOSE 80
 ENTRYPOINT ["./app", "prod"]
