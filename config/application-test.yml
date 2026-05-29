@@ -1,13 +1,13 @@
-server:
-  port: 8090
-  mode: test
-
+name: "z-3sp"
+mode: "test"
+port: 80
+host: "0.0.0.0"
 redis:
-  host: localhost
+  host: "redis.test.svc.cluster.local"
   port: 6379
   db: 0
+  passwd: ""
   pool_size: 10
-
 sms:
   access_key_id: ""
   access_key_secret: ""
