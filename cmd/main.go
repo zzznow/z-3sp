@@ -10,6 +10,7 @@ import (
 )
 
 func main() {
+	fmt.Println("z-3sp starting...")
 	env := os.Getenv("APP_ENV")
 	if env == "" {
 		env = "test"
