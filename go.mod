@@ -1,6 +1,6 @@
 module github.com/zzznow/z-3sp
 
-go 1.25.5
+go 1.26.3
 
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.63.98
