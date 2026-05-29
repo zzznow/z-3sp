@@ -35,26 +35,19 @@ type SmsConfig struct {
 }
 
 func InitConfig(env string) error {
-	fmt.Println("InitConfig: setting config file for env:", env)
 	viper.SetConfigFile("config/application-" + env + ".yml")
 	viper.AddConfigPath(".")
-	fmt.Println("InitConfig: reading config...")
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("InitConfig: read config failed:", err)
 		return fmt.Errorf("read config: %w", err)
 	}
-	fmt.Println("InitConfig: config read OK, setting up viper...")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 	viper.BindEnv("redis.passwd")
 	viper.BindEnv("sms.access_key_id")
 	viper.BindEnv("sms.access_key_secret")
-	fmt.Println("InitConfig: unmarshaling config...")
 	if err := viper.Unmarshal(Conf); err != nil {
-		fmt.Println("InitConfig: unmarshal failed:", err)
 		return fmt.Errorf("unmarshal config: %w", err)
 	}
-	fmt.Println("InitConfig: done")
 	viper.WatchConfig()
 	viper.OnConfigChange(func(in fsnotify.Event) {
 		viper.Unmarshal(Conf)
