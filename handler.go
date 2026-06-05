@@ -23,7 +23,7 @@ var rdb *redis.Client
 func InitSms() error {
 	cfg := internal.Conf.SmsConfig
 	if cfg == nil || cfg.AccessKeyId == "" {
-		slog.Warn("阿里云短信配置为空，跳过初始化")
+		slog.Warn("阿里云短信配置为空，跳过初始�?)
 		return nil
 	}
 
@@ -32,7 +32,7 @@ func InitSms() error {
 	if err != nil {
 		return fmt.Errorf("创建阿里云短信客户端失败: %w", err)
 	}
-	slog.Info("阿里云短信客户端初始化成功", "sign", cfg.SignName)
+	slog.Info("阿里云短信客户端初始化成�?, "sign", cfg.SignName)
 	return nil
 }
 
@@ -54,7 +54,7 @@ func InitRedis() error {
 		rdb = nil
 		return nil
 	}
-	slog.Info("Redis 初始化成功")
+	slog.Info("Redis 初始化成�?)
 	return nil
 }
 
@@ -80,19 +80,19 @@ func SendCode(c *gin.Context) {
 		return
 	}
 	if !isValidSmsType(req.Type) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "不支持的短信类型"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: 不支持的短信类型"})
 		return
 	}
 
 	// 频率限制
 	if rdb == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "服务不可用"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 服务不可�?})
 		return
 	}
 	intervalKey := "sms:interval:" + req.Type + ":" + req.Phone
 	ok, _ := rdb.SetNX(c.Request.Context(), intervalKey, "1", 60*time.Second).Result()
 	if !ok {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "请60秒后再试"})
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "z-3sp: �?0秒后再试"})
 		return
 	}
 
@@ -100,10 +100,10 @@ func SendCode(c *gin.Context) {
 	n, _ := rand.Int(rand.Reader, big.NewInt(1000000))
 	code := fmt.Sprintf("%06d", n.Int64())
 
-	// 发送短信
+	// 发送短�?
 	if _, err := sendAliyunSms(req.Phone, code, req.Type); err != nil {
-		slog.Error("发送短信失败", "phone", req.Phone, "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "发送失败，请稍后重试"})
+		slog.Error("发送短信失�?, "phone", req.Phone, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 发送失败，请稍后重�?})
 		return
 	}
 
@@ -111,7 +111,7 @@ func SendCode(c *gin.Context) {
 	codeKey := "sms:code:" + req.Type + ":" + req.Phone
 	rdb.Set(c.Request.Context(), codeKey, code, 5*time.Minute)
 
-	c.JSON(http.StatusOK, gin.H{"data": gin.H{"message": "验证码已发送"}})
+	c.JSON(http.StatusOK, gin.H{"data": gin.H{"message": "验证码已发�?}})
 }
 
 func VerifyCode(c *gin.Context) {
@@ -122,22 +122,22 @@ func VerifyCode(c *gin.Context) {
 	}
 
 	if rdb == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "服务不可用"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 服务不可�?})
 		return
 	}
 
 	codeKey := "sms:code:" + req.Type + ":" + req.Phone
 	stored, err := rdb.Get(c.Request.Context(), codeKey).Result()
 	if err == redis.Nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "验证码已过期"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: 验证码已过期"})
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "系统错误"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 系统错误"})
 		return
 	}
 	if stored != req.Code {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "验证码错误"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: 验证码错�?})
 		return
 	}
 
@@ -149,7 +149,7 @@ func VerifyCode(c *gin.Context) {
 
 func sendAliyunSms(phone, code, smsType string) (string, error) {
 	if smsClient == nil {
-		return "", fmt.Errorf("短信客户端未初始化")
+		return "", fmt.Errorf("短信客户端未初始�?)
 	}
 
 	cfg := internal.Conf.SmsConfig
