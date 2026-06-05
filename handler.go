@@ -1,4 +1,4 @@
-package handler
+﻿package handler
 
 import (
 	"context"
@@ -23,23 +23,23 @@ var rdb *redis.Client
 func InitSms() error {
 	cfg := internal.Conf.SmsConfig
 	if cfg == nil || cfg.AccessKeyId == "" {
-		slog.Warn("阿里云短信配置为空，跳过初始�?)
+		slog.Warn("闃块噷浜戠煭淇￠厤缃负绌猴紝璺宠繃鍒濆鍖?)
 		return nil
 	}
 
 	var err error
 	smsClient, err = dysmsapi.NewClientWithAccessKey("cn-hangzhou", cfg.AccessKeyId, cfg.AccessKeySecret)
 	if err != nil {
-		return fmt.Errorf("创建阿里云短信客户端失败: %w", err)
+		return fmt.Errorf("鍒涘缓闃块噷浜戠煭淇″鎴风澶辫触: %w", err)
 	}
-	slog.Info("阿里云短信客户端初始化成�?, "sign", cfg.SignName)
+	slog.Info("闃块噷浜戠煭淇″鎴风鍒濆鍖栨垚鍔?, "sign", cfg.SignName)
 	return nil
 }
 
 func InitRedis() error {
 	cfg := internal.Conf.RedisConfig
 	if cfg == nil || cfg.Host == "" {
-		slog.Warn("Redis 配置为空，跳过初始化")
+		slog.Warn("Redis 閰嶇疆涓虹┖锛岃烦杩囧垵濮嬪寲")
 		return nil
 	}
 
@@ -50,15 +50,15 @@ func InitRedis() error {
 		PoolSize: cfg.PoolSize,
 	})
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		slog.Warn("Redis 连接失败", "error", err)
+		slog.Warn("Redis 杩炴帴澶辫触", "error", err)
 		rdb = nil
 		return nil
 	}
-	slog.Info("Redis 初始化成�?)
+	slog.Info("Redis 鍒濆鍖栨垚鍔?)
 	return nil
 }
 
-// ── DTOs ─────────────────────────────────────────────────
+// 鈹€鈹€ DTOs 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 type SendSmsDTO struct {
 	Phone string `json:"phone" binding:"required"`
@@ -71,7 +71,7 @@ type VerifySmsDTO struct {
 	Type  string `json:"type" binding:"required"`
 }
 
-// ── Handlers ─────────────────────────────────────────────
+// 鈹€鈹€ Handlers 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 func SendCode(c *gin.Context) {
 	var req SendSmsDTO
@@ -80,38 +80,37 @@ func SendCode(c *gin.Context) {
 		return
 	}
 	if !isValidSmsType(req.Type) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: 不支持的短信类型"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: 涓嶆敮鎸佺殑鐭俊绫诲瀷"})
 		return
 	}
 
-	// 频率限制
+	// 棰戠巼闄愬埗
 	if rdb == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 服务不可�?})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 鏈嶅姟涓嶅彲鐢?})
 		return
 	}
 	intervalKey := "sms:interval:" + req.Type + ":" + req.Phone
 	ok, _ := rdb.SetNX(c.Request.Context(), intervalKey, "1", 60*time.Second).Result()
 	if !ok {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "z-3sp: �?0秒后再试"})
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "z-3sp: 璇?0绉掑悗鍐嶈瘯"})
 		return
 	}
 
-	// 生成 6 位验证码
+	// 鐢熸垚 6 浣嶉獙璇佺爜
 	n, _ := rand.Int(rand.Reader, big.NewInt(1000000))
 	code := fmt.Sprintf("%06d", n.Int64())
 
-	// 发送短�?
-	if _, err := sendAliyunSms(req.Phone, code, req.Type); err != nil {
-		slog.Error("发送短信失�?, "phone", req.Phone, "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 发送失败，请稍后重�?})
+	// 鍙戦€佺煭淇?	if _, err := sendAliyunSms(req.Phone, code, req.Type); err != nil {
+		slog.Error("鍙戦€佺煭淇″け璐?, "phone", req.Phone, "error", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 鍙戦€佸け璐ワ紝璇风◢鍚庨噸璇?})
 		return
 	}
 
-	// 存储
+	// 瀛樺偍
 	codeKey := "sms:code:" + req.Type + ":" + req.Phone
 	rdb.Set(c.Request.Context(), codeKey, code, 5*time.Minute)
 
-	c.JSON(http.StatusOK, gin.H{"data": gin.H{"message": "验证码已发�?}})
+	c.JSON(http.StatusOK, gin.H{"data": gin.H{"message": "楠岃瘉鐮佸凡鍙戦€?}})
 }
 
 func VerifyCode(c *gin.Context) {
@@ -122,22 +121,22 @@ func VerifyCode(c *gin.Context) {
 	}
 
 	if rdb == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 服务不可�?})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 鏈嶅姟涓嶅彲鐢?})
 		return
 	}
 
 	codeKey := "sms:code:" + req.Type + ":" + req.Phone
 	stored, err := rdb.Get(c.Request.Context(), codeKey).Result()
 	if err == redis.Nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: 验证码已过期"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: 楠岃瘉鐮佸凡杩囨湡"})
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 系统错误"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: 绯荤粺閿欒"})
 		return
 	}
 	if stored != req.Code {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: 验证码错�?})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: 楠岃瘉鐮侀敊璇?})
 		return
 	}
 
@@ -145,11 +144,11 @@ func VerifyCode(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": gin.H{"verified": true, "phone": req.Phone}})
 }
 
-// ── Aliyun ───────────────────────────────────────────────
+// 鈹€鈹€ Aliyun 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
 
 func sendAliyunSms(phone, code, smsType string) (string, error) {
 	if smsClient == nil {
-		return "", fmt.Errorf("短信客户端未初始�?)
+		return "", fmt.Errorf("鐭俊瀹㈡埛绔湭鍒濆鍖?)
 	}
 
 	cfg := internal.Conf.SmsConfig
