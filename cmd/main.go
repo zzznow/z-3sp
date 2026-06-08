@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/zzznow/common"
 	"github.com/zzznow/z-3sp"
 	"github.com/zzznow/z-3sp/internal"
 	"github.com/gin-gonic/gin"
@@ -36,6 +37,8 @@ func main() {
 
 	gin.SetMode(internal.Conf.Mode)
 	r := gin.Default()
+	r.Use(common.TraceMiddleware())
+	r.Use(func(c *gin.Context) { common.SetServiceName(c, "z-3sp"); c.Next() })
 	handler.RegisterRoutes(r)
 
 	addr := fmt.Sprintf("%s:%d", internal.Conf.Host, internal.Conf.Port)

@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 
+	"github.com/zzznow/common"
 	"github.com/zzznow/z-3sp/internal"
 )
 
@@ -76,23 +77,23 @@ type VerifySmsDTO struct {
 func SendCode(c *gin.Context) {
 	var req SendSmsDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		common.ErrorMsg(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	if !isValidSmsType(req.Type) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: ________________________"})
+		common.ErrorMsg(c, http.StatusBadRequest, "z-3sp: ________________________")
 		return
 	}
 
 	//             
 	if rdb == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: _______________"})
+		common.ErrorMsg(c, http.StatusInternalServerError, "z-3sp: _______________")
 		return
 	}
 	intervalKey := "sms:interval:" + req.Type + ":" + req.Phone
 	ok, _ := rdb.SetNX(c.Request.Context(), intervalKey, "1", 60*time.Second).Result()
 	if !ok {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "z-3sp: ___60____________"})
+		common.ErrorMsg(c, http.StatusTooManyRequests, "z-3sp: ___60____________")
 		return
 	}
 
@@ -103,7 +104,7 @@ func SendCode(c *gin.Context) {
 	//             
 	if _, err := sendAliyunSms(req.Phone, code, req.Type); err != nil {
 		slog.Error("__________________", "phone", req.Phone, "error", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: ______________________________"})
+		common.ErrorMsg(c, http.StatusInternalServerError, "z-3sp: ______________________________")
 		return
 	}
 
@@ -117,27 +118,27 @@ func SendCode(c *gin.Context) {
 func VerifyCode(c *gin.Context) {
 	var req VerifySmsDTO
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		common.ErrorMsg(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if rdb == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: _______________"})
+		common.ErrorMsg(c, http.StatusInternalServerError, "z-3sp: _______________")
 		return
 	}
 
 	codeKey := "sms:code:" + req.Type + ":" + req.Phone
 	stored, err := rdb.Get(c.Request.Context(), codeKey).Result()
 	if err == redis.Nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: __________________"})
+		common.ErrorMsg(c, http.StatusBadRequest, "z-3sp: __________________")
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "z-3sp: ____________"})
+		common.ErrorMsg(c, http.StatusInternalServerError, "z-3sp: ____________")
 		return
 	}
 	if stored != req.Code {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "z-3sp: _______________"})
+		common.ErrorMsg(c, http.StatusBadRequest, "z-3sp: _______________")
 		return
 	}
 
@@ -179,3 +180,4 @@ func isValidSmsType(t string) bool {
 	}
 	return false
 }
+
